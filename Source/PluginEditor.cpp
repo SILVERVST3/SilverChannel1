@@ -150,17 +150,19 @@ void SilverChannelEditor::timerCallback()
 void SilverChannelEditor::valueTreePropertyChanged (juce::ValueTree& t, const juce::Identifier& id)
 {
     if (t == proc.apvts.state && id.toString() == "order")
-        juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<SilverChannelEditor> (this)]
-                                         { if (safe) safe->layoutModules(); });
+    {
+        juce::Component::SafePointer<SilverChannelEditor> safe (this);
+        juce::MessageManager::callAsync ([safe] { if (safe != nullptr) safe->layoutModules(); });
+    }
 }
 
 void SilverChannelEditor::showExpanded (int moduleId)
 {
     expanded = std::make_unique<ui::ExpandedView> (proc, moduleId);
-    expanded->onClose = [this]
+    juce::Component::SafePointer<SilverChannelEditor> safe (this);
+    expanded->onClose = [safe]
     {
-        juce::MessageManager::callAsync ([safe = juce::Component::SafePointer<SilverChannelEditor> (this)]
-                                         { if (safe) safe->expanded.reset(); });
+        juce::MessageManager::callAsync ([safe] { if (safe != nullptr) safe->expanded.reset(); });
     };
     main.addAndMakeVisible (*expanded);
     expanded->setBounds (0, 0, baseW, baseH);
